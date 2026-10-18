@@ -80,3 +80,4 @@ def _reason(status, blockers, score, cfg):
     if status == "APPROVED_WITH_WARNINGS":
         return "Deployment approved - non-blocking warnings should be addressed soon."
     return "All validation checks passed. Deployment approved."
+
