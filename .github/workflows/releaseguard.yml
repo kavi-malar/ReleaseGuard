@@ -21,7 +21,8 @@ jobs:
 
       # Optional external scanners - ReleaseGuard auto-detects them on PATH.
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.0
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
         continue-on-error: true
       - name: Install Gitleaks
         run: |
