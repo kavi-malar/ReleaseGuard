@@ -1,0 +1,60 @@
+name: ReleaseGuard - secure release pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Install ReleaseGuard
+        run: pip install -r requirements.txt
+
+      # Optional external scanners - ReleaseGuard auto-detects them on PATH.
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.0
+        continue-on-error: true
+      - name: Install Gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz gitleaks
+          sudo mv gitleaks /usr/local/bin/
+        continue-on-error: true
+
+      - name: Build Docker image
+        run: docker build -t app:${{ github.sha }} .
+
+      - name: Run ReleaseGuard gate
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          RG_SERVER_URL: ${{ secrets.RG_SERVER_URL }}   # optional dashboard URL
+          RG_API_KEY: ${{ secrets.RG_API_KEY }}
+        run: |
+          EXTRA=""
+          if [ -n "$RG_SERVER_URL" ]; then EXTRA="--server $RG_SERVER_URL"; fi
+          python -m releaseguard.cli scan . \
+            --project "${{ github.repository }}" --commit "${{ github.sha }}" --branch "${{ github.ref_name }}" \
+            --image app:${{ github.sha }} --json report.json --html report.html $EXTRA
+
+      - name: Upload readiness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: releaseguard-report, path: "report.*" }
+
+  deploy:
+    name: Deploy (only if approved)
+    needs: validate            # job is skipped automatically when validation fails
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "✅ ReleaseGuard approved this release - add your deploy commands here."

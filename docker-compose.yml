@@ -1,0 +1,20 @@
+services:
+  releaseguard:
+    build: .
+    ports: ["5000:5000"]
+    environment:
+      RG_API_KEY: ${RG_API_KEY:-change-me-please}
+    volumes: ["rg-data:/app/instance"]
+
+  # Optional: local SonarQube for the code-quality gate  ->  docker compose --profile sonar up
+  sonarqube:
+    image: sonarqube:community
+    profiles: ["sonar"]
+    ports: ["9000:9000"]
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes: ["sonar-data:/opt/sonarqube/data"]
+
+volumes:
+  rg-data:
+  sonar-data:

@@ -1,0 +1,5 @@
+{
+  "block_on": ["CRITICAL", "HIGH"],
+  "min_score": 60,
+  "exclude_dirs": ["sample_projects"]
+}

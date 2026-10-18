@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReleaseGuard report - {{ r.project }}</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--text:#1c2433;--mut:#6b7587;--bd:#e2e6ee;--ok:#1a9d5c;--warn:#d98a00;--bad:#d6334a;--pri:#2f5be7}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1420;--card:#182032;--text:#e8ecf5;--mut:#93a0b8;--bd:#273250}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+main{max-width:1000px;margin:24px auto;padding:0 16px}.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:16px}
+.hero{border-left:8px solid var(--c)}.APPROVED{--c:var(--ok)}.APPROVED_WITH_WARNINGS{--c:var(--warn)}.BLOCKED{--c:var(--bad)}
+h1{margin:0 0 4px;font-size:22px}h2{font-size:16px;margin:0 0 10px}.mut{color:var(--mut);font-size:13px}
+.status{font-size:26px;font-weight:800;color:var(--c)}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px;border-bottom:1px solid var(--bd);font-size:14px;vertical-align:top}
+.sev{font-weight:700;font-size:12px}.CRITICAL,.HIGH{color:var(--bad)}.MEDIUM{color:var(--warn)}.LOW{color:var(--pri)}
+.pill{padding:1px 9px;border-radius:99px;font-size:12px;font-weight:700;color:#fff}.PASS{background:var(--ok)}.WARN{background:var(--warn)}.FAIL{background:var(--bad)}.SKIPPED{background:#8a93a6}
+a{color:var(--pri)}code{font-size:13px}
+</style></head><body><main>
+{% if rid %}<a href="/">← Dashboard</a>{% endif %}
+<div class="card hero {{ r.status }}">
+ <h1>{{ r.project }}</h1>
+ <div class="mut">branch {{ r.branch or '-' }} · commit {{ (r.commit or '-')[:10] }} · {{ r.created_at }} · {{ r.duration_sec }}s</div>
+ <div class="status">{{ r.status.replace('_',' ') }} &nbsp;·&nbsp; Score {{ r.score }}/100</div>
+ <div>{{ r.reason }}</div>
+ <div class="mut" style="margin-top:6px">Critical {{ r.counts.CRITICAL }} · High {{ r.counts.HIGH }} · Medium {{ r.counts.MEDIUM }} · Low {{ r.counts.LOW }}</div>
+</div>
+{% if r.recommendations %}<div class="card"><h2>Recommended corrective actions</h2><ol>{% for x in r.recommendations %}<li>{{ x }}</li>{% endfor %}</ol></div>{% endif %}
+{% for c in r.checks %}
+<div class="card"><h2>{{ c.name }} <span class="pill {{ c.status }}">{{ c.status }}</span> <span class="mut">· {{ c.tool }}</span></h2>
+{% if c.note %}<div class="mut">{{ c.note }}</div>{% endif %}
+{% if c.findings %}<table><tr><th>Severity</th><th>Issue</th><th>Location</th><th>Fix</th></tr>
+{% for f in c.findings %}<tr><td class="sev {{ f.severity }}">{{ f.severity }}</td><td>{{ f.title }}</td>
+<td><code>{{ f.file or '' }}{% if f.line %}:{{ f.line }}{% endif %}</code></td><td>{{ f.recommendation }}</td></tr>{% endfor %}</table>
+{% elif c.status!='SKIPPED' %}<div class="mut">No issues found.</div>{% endif %}</div>
+{% endfor %}
+</main></body></html>
