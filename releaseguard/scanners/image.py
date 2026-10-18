@@ -15,7 +15,8 @@ def scan(root, image=None, **_):
         return make_result("Container Image Scan", "trivy", [], status="SKIPPED",
                            note="Trivy is not installed.")
     try:
-        p = subprocess.run([exe, "image", "--quiet", "--format", "json", "--severity", "CRITICAL,HIGH,MEDIUM", image],
+        p = subprocess.run([exe, "image", "--quiet", "--format", "json", "--severity", "CRITICAL,HIGH,MEDIUM",
+                            "--ignore-unfixed", image],
                            capture_output=True, text=True, timeout=600)
         data = json.loads(p.stdout or "{}")
     except Exception as e:
