@@ -81,4 +81,3 @@ def _reason(status, blockers, score, cfg):
         return "Deployment approved - non-blocking warnings should be addressed soon."
     return "All validation checks passed. Deployment approved."
 
-KEY = "AKIAIOSFODNN7EXAMPLE"
